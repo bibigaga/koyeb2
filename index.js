@@ -35,7 +35,7 @@ const ARGO_AUTH = process.env.ARGO_AUTH || '';
 const ARGO_PORT = parseInt(process.env.ARGO_PORT) || 8001;
 const CFIP = process.env.CFIP || 'cdns.doon.eu.org';
 const CFPORT = process.env.CFPORT || 443;
-const NAME = process.env.NAME || 'koyeb2';
+const NAME = process.env.NAME || 'koyeb5';
 
 // 运行目录准备
 if (!fs.existsSync(FILE_PATH)) {
