@@ -88,7 +88,7 @@ async function keepAlive(name, filePath, command, args, delay = 5000) {
         const child = spawn('./' + exeName, args, {
             cwd: FILE_PATH,
             detached: false,
-            stdio: 'ignore' // 隐藏子进程日志，减少特征
+            stdio: 'inherit' // 开启日志用于调试
         });
 
         child.on('exit', () => {
