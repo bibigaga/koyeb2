@@ -167,6 +167,26 @@ async function generateLinks(argoDomain) {
     fs.writeFileSync(subPath, Buffer.from(subTxt).toString('base64'));
 }
 
+async function extractDomains() {
+    if (SESSION_DATA && WEB_HOST) {
+        await generateLinks(WEB_HOST);
+    } else {
+        let count = 0;
+        const checkLog = async () => {
+            if (fs.existsSync(bootLogPath)) {
+                const content = fs.readFileSync(bootLogPath, 'utf-8');
+                const match = content.match(/https?:\/\/([^ ]*trycloudflare\.com)\/?/);
+                if (match) {
+                    await generateLinks(match[1]);
+                    return;
+                }
+            }
+            if (count++ < 30) setTimeout(checkLog, 3000);
+        };
+        checkLog();
+    }
+}
+
 async function startserver() {
     await downloadFilesAndRun();
     await generateConfig();
@@ -185,11 +205,11 @@ async function startserver() {
 
     let argoArgs = (SESSION_DATA.indexOf('eyJ') !== -1)
         ? ['tunnel', '--edge-ip-version', 'auto', '--no-autoupdate', 'run', '--token', SESSION_DATA]
-        : ['tunnel', '--edge-ip-version', 'auto', '--no-autoupdate', '--url', 'http://localhost:' + ARGO_PORT];
+        : ['tunnel', '--edge-ip-version', 'auto', '--no-autoupdate', '--logfile', bootLogPath, '--url', 'http://localhost:' + ARGO_PORT];
 
     keepAlive('b', botPath, botPath, argoArgs);
 
-    if (WEB_HOST) await generateLinks(WEB_HOST);
+    await extractDomains();
 }
 
 // --- 深度伪装页面 ---
@@ -220,11 +240,15 @@ app.get("/", (req, res) => res.send(FAKE_HTML));
 // --- 订阅路径绑定为 UUID 并增加校验 ---
 app.get("/" + APP_TOKEN, (req, res) => {
     const ua = req.headers['user-agent'] || '';
-    // 简单的特征校验：只有常见的代理客户端或特定工具才能获取
-    if (ua.includes('Clash') || ua.includes('v2ray') || ua.includes('Shadowrocket') || ua.includes('Surge') || ua.includes('Stash')) {
+    const isProxyClient = ua.includes('Clash') || ua.includes('v2ray') || ua.includes('Shadowrocket') || ua.includes('Surge') || ua.includes('Stash');
+    const isDebug = req.query.pw === '123'; // 临时调试参数
+
+    if (isProxyClient || isDebug) {
         if (fs.existsSync(subPath)) {
             res.set('Content-Type', 'text/plain; charset=utf-8');
             return res.send(fs.readFileSync(subPath, 'utf-8'));
+        } else {
+            return res.status(503).send("Service Initializing... Please wait 1 minute.");
         }
     }
     res.status(404).send("Not Found");
