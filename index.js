@@ -217,10 +217,10 @@ const FAKE_HTML = `
 
 app.get("/", (req, res) => res.send(FAKE_HTML));
 
-
+// --- 订阅路径绑定为 UUID 并增加校验 ---
 app.get("/" + APP_TOKEN, (req, res) => {
     const ua = req.headers['user-agent'] || '';
-    
+    // 简单的特征校验：只有常见的代理客户端或特定工具才能获取
     if (ua.includes('Clash') || ua.includes('v2ray') || ua.includes('Shadowrocket') || ua.includes('Surge') || ua.includes('Stash')) {
         if (fs.existsSync(subPath)) {
             res.set('Content-Type', 'text/plain; charset=utf-8');
