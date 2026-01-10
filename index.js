@@ -149,10 +149,10 @@ async function generateConfig() {
     const config = {
         log: { access: '/dev/null', error: '/dev/null', loglevel: 'none' },
         inbounds: [
-            { port: ARGO_PORT, protocol: K_VLESS, settings: { clients: [{ id: APP_TOKEN }], decryption: 'none', fallbacks: [{ dest: PORT }, { path: "/v-argo", dest: 3002 }, { path: "/m-argo", dest: 3003 }, { path: "/t-argo", dest: 3004 }] }, streamSettings: { network: 'tcp' } },
-            { port: 3002, listen: "127.0.0.1", protocol: K_VLESS, settings: { clients: [{ id: APP_TOKEN, level: 0 }], decryption: "none" }, streamSettings: { network: K_WS, security: "none", wsSettings: { path: "/v-argo" } } },
-            { port: 3003, listen: "127.0.0.1", protocol: K_VMESS, settings: { clients: [{ id: APP_TOKEN, alterId: 0 }] }, streamSettings: { network: K_WS, wsSettings: { path: "/m-argo" } } },
-            { port: 3004, listen: "127.0.0.1", protocol: K_TROJAN, settings: { clients: [{ password: APP_TOKEN }] }, streamSettings: { network: K_WS, security: "none", wsSettings: { path: "/t-argo" } } },
+            { port: parseInt(ARGO_PORT), protocol: K_VLESS, settings: { clients: [{ id: APP_TOKEN }], decryption: 'none', fallbacks: [{ dest: parseInt(PORT) }, { path: "/vless-argo", dest: 3002 }, { path: "/vmess-argo", dest: 3003 }, { path: "/trojan-argo", dest: 3004 }] }, streamSettings: { network: 'tcp' } },
+            { port: 3002, listen: "127.0.0.1", protocol: K_VLESS, settings: { clients: [{ id: APP_TOKEN, level: 0 }], decryption: "none" }, streamSettings: { network: K_WS, security: "none", wsSettings: { path: "/vless-argo" } } },
+            { port: 3003, listen: "127.0.0.1", protocol: K_VMESS, settings: { clients: [{ id: APP_TOKEN, alterId: 0 }] }, streamSettings: { network: K_WS, wsSettings: { path: "/vmess-argo" } } },
+            { port: 3004, listen: "127.0.0.1", protocol: K_TROJAN, settings: { clients: [{ password: APP_TOKEN }] }, streamSettings: { network: K_WS, security: "none", wsSettings: { path: "/trojan-argo" } } },
         ],
         outbounds: [{ protocol: "freedom", tag: "direct" }]
     };
@@ -162,8 +162,8 @@ async function generateConfig() {
 async function generateLinks(argoDomain) {
     const ISP = await getMetaInfo();
     const nodeName = NAME + '-' + ISP;
-    const VMESS = { v: '2', ps: nodeName, add: CFIP, port: CFPORT, id: APP_TOKEN, aid: '0', scy: 'none', net: K_WS, type: 'none', host: argoDomain, path: '/m-argo?ed=2560', tls: K_TLS, sni: argoDomain };
-    const subTxt = `\n${K_VLESS}://${APP_TOKEN}@${CFIP}:${CFPORT}?encryption=none&security=${K_TLS}&sni=${argoDomain}&type=${K_WS}&host=${argoDomain}&path=%2Fv-argo%3Fed%3D2560#${nodeName}\n\n${K_VMESS}://${Buffer.from(JSON.stringify(VMESS)).toString('base64')}\n\n${K_TROJAN}://${APP_TOKEN}@${CFIP}:${CFPORT}?security=${K_TLS}&sni=${argoDomain}&type=${K_WS}&host=${argoDomain}&path=%2Ft-argo%3Fed%3D2560#${nodeName}\n`;
+    const VMESS = { v: '2', ps: nodeName, add: CFIP, port: CFPORT, id: APP_TOKEN, aid: '0', scy: 'none', net: K_WS, type: 'none', host: argoDomain, path: '/vmess-argo?ed=2560', tls: K_TLS, sni: argoDomain };
+    const subTxt = `\n${K_VLESS}://${APP_TOKEN}@${CFIP}:${CFPORT}?encryption=none&security=${K_TLS}&sni=${argoDomain}&type=${K_WS}&host=${argoDomain}&path=%2Fvless-argo%3Fed%3D2560#${nodeName}\n\n${K_VMESS}://${Buffer.from(JSON.stringify(VMESS)).toString('base64')}\n\n${K_TROJAN}://${APP_TOKEN}@${CFIP}:${CFPORT}?security=${K_TLS}&sni=${argoDomain}&type=${K_WS}&host=${argoDomain}&path=%2Ftrojan-argo%3Fed%3D2560#${nodeName}\n`;
     fs.writeFileSync(subPath, Buffer.from(subTxt).toString('base64'));
 }
 
