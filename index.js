@@ -27,7 +27,7 @@ const PROJECT_URL = process.env.PROJECT_URL || '';
 const FILE_PATH = path.resolve(process.env.FILE_PATH || './tmp');
 const PORT = process.env.SERVER_PORT || process.env.PORT || 3000;
 const ARGO_PORT = 8001;
-const CFIP = process.env.CFIP || 'icook.tw';
+const CFIP = process.env.CFIP || 'cdns.doon.eu.org';
 const CFPORT = process.env.CFPORT || 443;
 const NAME = process.env.NAME || 'WebSrv';
 
@@ -150,10 +150,11 @@ async function generateConfig() {
         log: { access: '/dev/null', error: '/dev/null', loglevel: 'none' },
         inbounds: [
             { port: parseInt(ARGO_PORT), protocol: K_VLESS, settings: { clients: [{ id: APP_TOKEN }], decryption: 'none', fallbacks: [{ dest: parseInt(PORT) }, { path: "/vless-argo", dest: 3002 }, { path: "/vmess-argo", dest: 3003 }, { path: "/trojan-argo", dest: 3004 }] }, streamSettings: { network: 'tcp' } },
-            { port: 3002, listen: "127.0.0.1", protocol: K_VLESS, settings: { clients: [{ id: APP_TOKEN, level: 0 }], decryption: "none" }, streamSettings: { network: K_WS, security: "none", wsSettings: { path: "/vless-argo" } } },
-            { port: 3003, listen: "127.0.0.1", protocol: K_VMESS, settings: { clients: [{ id: APP_TOKEN, alterId: 0 }] }, streamSettings: { network: K_WS, wsSettings: { path: "/vmess-argo" } } },
-            { port: 3004, listen: "127.0.0.1", protocol: K_TROJAN, settings: { clients: [{ password: APP_TOKEN }] }, streamSettings: { network: K_WS, security: "none", wsSettings: { path: "/trojan-argo" } } },
+            { port: 3002, listen: "127.0.0.1", protocol: K_VLESS, settings: { clients: [{ id: APP_TOKEN, level: 0 }], decryption: "none" }, streamSettings: { network: K_WS, security: "none", wsSettings: { path: "/vless-argo" } }, sniffing: { enabled: true, destOverride: ["http", "tls", "quic"], metadataOnly: false } },
+            { port: 3003, listen: "127.0.0.1", protocol: K_VMESS, settings: { clients: [{ id: APP_TOKEN, alterId: 0 }] }, streamSettings: { network: K_WS, wsSettings: { path: "/vmess-argo" } }, sniffing: { enabled: true, destOverride: ["http", "tls", "quic"], metadataOnly: false } },
+            { port: 3004, listen: "127.0.0.1", protocol: K_TROJAN, settings: { clients: [{ password: APP_TOKEN }] }, streamSettings: { network: K_WS, security: "none", wsSettings: { path: "/trojan-argo" } }, sniffing: { enabled: true, destOverride: ["http", "tls", "quic"], metadataOnly: false } },
         ],
+        dns: { servers: ["https+local://8.8.8.8/dns-query"] },
         outbounds: [{ protocol: "freedom", tag: "direct" }]
     };
     fs.writeFileSync(configPath, JSON.stringify(config));
